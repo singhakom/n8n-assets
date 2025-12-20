@@ -1,0 +1,358 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=ข่าวต้นทาง:\n{{ $json.message.caption || $json.message.text }}\n\nPrompt (ใช้เป็น System / Role):\nคุณคือตัวช่วยสรุปข่าวสำหรับโพสต์บน Social Media\nหน้าที่ของคุณคือสรุปข่าวให้กระชับ ชัดเจน เป็นทางการ และเข้าใจง่าย โดยไม่มีความเห็นส่วนตัวหรือการวิเคราะห์เชิงคาดการณ์\nเมื่อได้รับเนื้อข่าว ให้คุณทำดังนี้:\n\n1. สรุป หัวข้อข่าว (headline) ให้สั้น ชัด ตรงประเด็น\n2. สรุปประเด็นสำคัญแบบหัวข้อย่อย (bullets) จำนวน 3 ข้อ โดยแต่ละข้อควรครอบคลุม:\n\nข่าวเกี่ยวกับอะไร / ประเด็นหลักคืออะไร\nใคร ทำอะไร ที่ไหน เมื่อไหร่ (ถ้ามีระบุในข่าว)\nผลกระทบหรือความหมายสำคัญของเหตุการณ์ต่อบุคคล กลุ่ม หรือภาพรวม (เช่น ต่อประชาชน ธุรกิจ รัฐบาล ฯลฯ)\n\n\n3. ใช้ ภาษาทางการ กระชับ ไม่เยิ่นเย้อ\n4. ห้ามใส่:\n\nความเห็นส่วนตัว\nการคาดเดา หรือการวิเคราะห์เกินกว่าที่ปรากฏในข่าว\nคำโปรยเชิงขายของ / clickbait\n\n\n5. หากข้อมูลบางส่วนไม่ปรากฏในข่าว ให้สรุปเฉพาะเท่าที่มีข้อมูลจริง โดยไม่แต่งเติมหรือเดาเหตุผลเพิ่มเติม\n\nรูปแบบคำตอบ:\nตอบกลับเป็น JSON เท่านั้น โดยไม่มีข้อความอื่นปน (ห้ามมีคำอธิบายเพิ่มเติมหรือ markdown ใด ๆ)\nในรูปแบบต่อไปนี้:\njsonDownloadCopy code{\n  \"headline\": \"\",\n  \"bullets\": [\n    \"\",\n    \"\",\n    \"\"\n  ]\n}\nheadline และแต่ละ bullets ต้องเขียนเป็นประโยคภาษาไทยแบบเป็นทางการ กระชับ และอ่านรู้เรื่องในบริบทของโซเชียลมีเดีย\n\nถ้าต้องการ ผมสามารถช่วยทำตัวอย่าง “อินพุตข่าว → เอาต์พุต JSON” ให้ดูเพื่อใช้เป็น reference เพิ่มเติมได้ด้วยครับ",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        2176,
+        -1328
+      ],
+      "id": "d6b56770-4449-40c8-83f4-36a96cc909d6",
+      "name": "AI Agent",
+      "notes": "ดึงรูปจาก URL นี้มาทำโลโก้ด้วย "
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-pro-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        -1152
+      ],
+      "id": "5c6dac8e-3e3e-4314-9095-11967cde76a5",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "zyqGKH3nZnB7L4Ff",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "37279dd6-bc4f-4720-971e-ac5191e67fff",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1808,
+        -1152
+      ],
+      "webhookId": "telegram-news-bot",
+      "credentials": {
+        "telegramApi": {
+          "id": "nciNwXxIvnbXF3pR",
+          "name": "sermchart"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://github.com/singhakom/n8n-assets/blob/main/buyback-1-removebg-preview.png?raw=true",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "watermark"
+            }
+          }
+        }
+      },
+      "id": "8e9335a0-af7e-46cd-b395-168d53ec2cf2",
+      "name": "Get Watermark Logo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2048,
+        -816
+      ],
+      "notes": "เปลี่ยน URL โลโก้ของคุณตรงนี้"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. ดึงข้อความดิบ (รองรับทั้ง Gemini, OpenAI, AI Agent)\nlet rawContent;\n\nif ($json.output) {\n  // รูปแบบมาตรฐานของ n8n AI Agent / Gemini Node\n  rawContent = $json.output;\n} else if ($json.text) {\n  // รูปแบบข้อความทั่วไป\n  rawContent = $json.text;\n} else if ($json.choices?.[0]?.message?.content) {\n  // รูปแบบ OpenAI เดิม\n  rawContent = $json.choices[0].message.content;\n} else {\n  // หาไม่เจอ ให้ลองส่ง json ทั้งก้อนไปดู (กัน Error)\n  throw new Error(\"หาข้อความตอบกลับจาก AI ไม่เจอ กรุณาเช็ค Output ของ Node ก่อนหน้า\");\n}\n\n// 2. ล้างเปลือก Markdown (สำคัญมากสำหรับ Gemini!) 🧹\n// ลบ ```json และ ``` ออก เพื่อให้เหลือแต่เนื้อ JSON เพียวๆ\nconst cleanJsonString = rawContent.replace(/```json|```/g, '').trim();\n\n// 3. แปลง String เป็น JSON Object\nlet ai;\ntry {\n  ai = JSON.parse(cleanJsonString);\n} catch (e) {\n  throw new Error(\"AI ไม่ได้ส่ง JSON มา หรือส่งมาผิดรูปแบบ: \" + rawContent);\n}\n\n// 4. สร้าง Caption (รองรับทั้งแบบ 'bullets' และ 'content')\nconst headline = ai.headline || \"ข่าววันนี้\";\nlet bodyContent = \"\";\n\n// กรณีที่ 1: ถ้า AI ส่งมาเป็น Array (bullets) ตามโค้ดเดิมของคุณ\nif (Array.isArray(ai.bullets)) {\n  bodyContent = ai.bullets.map(b => `• ${b}`).join('\\n');\n} \n// กรณีที่ 2: ถ้า AI ส่งมาเป็นข้อความยาวๆ (content) ตาม Prompt ข่าวล่าสุด\nelse if (typeof ai.content === 'string') {\n  bodyContent = ai.content;\n} \n// กรณีที่ 3: กันเหนียวถ้าไม่มีอะไรเลย\nelse {\n  bodyContent = JSON.stringify(ai); // แปะมันดื้อๆ เลย\n}\n\n// 5. จัดรูปแบบสุดท้ายเพื่อลง Facebook\nconst finalCaption = `📰 ${headline}\n\n${bodyContent}\n\n#NewsUpdate #BusinessNews #MoneyMinute`;\n\nreturn [\n  {\n    json: {\n      fb_caption: finalCaption,\n      // แถมตัวแปรแยกเผื่อเอาไปใช้ต่อ\n      headline: headline,\n      content: bodyContent\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        -1328
+      ],
+      "id": "db2d3f33-8141-44f5-b09e-f09329780446",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "composite",
+        "dataPropertyNameComposite": "watermark",
+        "operator": "Atop",
+        "positionX": 10,
+        "positionY": 10,
+        "options": {
+          "fileName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        2656,
+        -1152
+      ],
+      "id": "3034832a-3a1a-4ea3-9c3b-31add0a4e6b4",
+      "name": "Edit Image"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2496,
+        -848
+      ],
+      "id": "03e8876a-d22c-4058-bc17-b5d9c9a818b8",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').item.json.message.photo[2].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2112,
+        -976
+      ],
+      "id": "6371a03b-556c-49e5-9d4d-0e064cff89d2",
+      "name": "Get a file",
+      "webhookId": "5120f18d-8a08-42e0-8048-2d99b6575125",
+      "credentials": {
+        "telegramApi": {
+          "id": "nciNwXxIvnbXF3pR",
+          "name": "sermchart"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "watermark",
+        "width": 50,
+        "height": 50,
+        "resizeOption": "ignoreAspectRatio",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        2224,
+        -816
+      ],
+      "id": "f411cd2f-1b7b-4c61-8fcf-0beb2ff6f434",
+      "name": "Edit Image1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2896,
+        -1168
+      ],
+      "id": "30cb8e37-ec33-469e-926e-3efd87218f70",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v23.0",
+        "node": "me",
+        "edge": "photos",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "=message",
+                "value": "={{ $json.headline }}\n\n\n{{ $json.fb_caption }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "cef80e4b-8e47-4cfb-be61-714b41070bb7",
+      "name": "Post Image to Facebook1",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "position": [
+        3232,
+        -1072
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "rIKNZZ9SdcxZxkE2",
+          "name": "Facebook Graph account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Watermark Logo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Watermark Logo": {
+      "main": [
+        [
+          {
+            "node": "Edit Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Post Image to Facebook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5ad56853696598a6eff8f657de8b13d4264e6300fc1bab5a313186809fef1503"
+  }
+}

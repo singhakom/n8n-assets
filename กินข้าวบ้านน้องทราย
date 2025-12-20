@@ -1,0 +1,379 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "2d3cbe77-7fa4-43fc-b234-c33fbe2046d9",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -880,
+        -896
+      ],
+      "id": "76a55e50-d52b-46a1-b7b5-7a0295210e8c",
+      "name": "Webhook",
+      "webhookId": "2d3cbe77-7fa4-43fc-b234-c33fbe2046d9"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=You are \"Nong Sai\" (น้องทราย), the friendly receptionist of the shop \"Kin Khao Ban Nong Sai\".\n\nIMPORTANT - LANGUAGE RULE:\n- ALWAYS respond in the SAME LANGUAGE as the user.\n\nYOUR PERSONALITY:\n- Cheerful, polite, and welcoming. Use emojis like 🍚🏠😋❤️.\n\nYOUR DUTIES (Priority Order):\n\n1. **HANDLING FEEDBACK (Review / Taste / Complaints / Images):**\n   - IF the user talks about taste (Good/Bad), service, sends an image, or complains:\n   \n   👉 CASE A: NEGATIVE Feedback / Complaint\n      - Step 1: Apologize sincerely.\n      - Step 2: Ask for a \"Phone Number\" for the manager to call back.\n      - Step 3: ONLY AFTER getting the phone number -> Use 'saveFeedbackTool'.\n   \n   👉 CASE B: POSITIVE Feedback / Compliment (e.g., \"Delicious\", \"Good service\")\n      - Step 1: Thank the user warmly! 🥰\n      - Step 2: IMMEDIATELY Use 'saveFeedbackTool'.\n        (For Positive feedback, put \"-\" in the PhoneNumber field).\n\n   👉 CASE C: User sends an IMAGE\n      - Treat it as potential feedback. Ask nicely if it's a review or if there's an issue.\n      - If it's an issue -> Go to CASE A.\n\n   ⚠️ TOOL RULE: When saving, generate current 'Timestamp' (YYYY-MM-DD HH:MM).\n\n2. **MENU & RECOMMENDATIONS:**\n   - If asked about menu, YOU MUST use the Google Sheets tool (Menu Sheet).\n   - List AT LEAST 5 items with Price & Image Link.\n\n3. **HANDLING STICKERS (Context Aware):**\n   - If the user sends a sticker:\n   - IF it's during a conversation: Reply with a relevant emoji or short cute phrase.\n   - IF the order/conversation is finished: Just reply with a \"Thank you\" sticker or emoji. DO NOT start selling again.\n\n4. **GENERAL INFO:**\n   - Mon-Fri: 20:00 - 23:00 / Sat-Sun: 10:30 - 20:30.\n   - Unknown info: \"Please wait for the owner.\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -128,
+        -848
+      ],
+      "id": "6c9164a7-22ae-4bee-8ad1-42ba96fbe852",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-flash-latest",
+        "options": {
+          "maxOutputTokens": 500,
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -752,
+        -496
+      ],
+      "id": "bd6e420a-a3c2-4aa3-965d-e451bc7e57ed",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "zyqGKH3nZnB7L4Ff",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.chatInput }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -608,
+        -496
+      ],
+      "id": "e3c83f60-ce4e-4bd6-957c-b90e9ea4bcc6",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 3E8pjTckzlZM2V56H+ZgG0eUzeJ2NExUSvUyYypttcP1NaV8oUqc0PcolPC9dfkYHK2i1GFiRgL2sgZD7vHNia4c0ktptIzs9MEdmJdbh49/G00NELSMrD4GIbtJX/zvQcSQbm/OOvryBRMTCib4egdB04t89/1O/w1cDnyilFU="
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"replyToken\": \"{{ $('Webhook').item.json.body.events[0].replyToken }}\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": {{ JSON.stringify($('AI Agent').item.json.output) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        240,
+        -688
+      ],
+      "id": "736f6e5c-e5ae-4cdf-8b48-e4eb19f02f72",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1lc_bh2ff6d4QtiOkAbCI7xks511cdcjtGm5tNlfP1tU",
+          "mode": "list",
+          "cachedResultName": "รูปภาพเมนูร้านกินข้าวบ้านน้องทราย",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lc_bh2ff6d4QtiOkAbCI7xks511cdcjtGm5tNlfP1tU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "manu",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lc_bh2ff6d4QtiOkAbCI7xks511cdcjtGm5tNlfP1tU/edit#gid=0"
+        },
+        "combineFilters": "OR",
+        "options": {
+          "returnFirstMatch": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        -912
+      ],
+      "id": "38c99a9c-ca1e-420d-94c6-c3ac19c17a94",
+      "name": "manu",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BFzqtZ4Jdc301hqN",
+          "name": "sheet กินข้าวบ้านน้องทราย"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ตรวจสอบว่ามีข้อมูลส่งมาไหม\nconst event = $json.body.events ? $json.body.events[0] : null;\n\nif (!event) {\n  return { json: { chatInput: \"System: Verify Webhook Connection\" } };\n}\n\nconst msgType = event.message.type;\nlet finalInput = \"\";\n\nif (msgType === 'text') {\n  // 1. ข้อความปกติ\n  finalInput = event.message.text;\n\n} else if (msgType === 'sticker') {\n  // ส่งแค่ Fact ว่าเป็นสติกเกอร์ (ไม่ต้องสั่งให้ชมแล้ว)\n  const stickerId = event.message.stickerId;\n  const stickerUrl = `https://sticker-shop.line-scdn.net/stickershop/v1/sticker/${stickerId}/android/sticker.png`;\n  finalInput = `[User ส่งสติกเกอร์มา (Link: ${stickerUrl})]`;\n\n} else if (msgType === 'image') {\n  // 3. รูปภาพ -> เข้าเงื่อนไข Scenario 2 (Feedback)\n  finalInput = \"[User ส่งรูปภาพมา ให้ตอบรับว่าได้รับรูปภาพแล้ว และถามว่าเป็นภาพบรรยากาศร้านหรือมีปัญหาอะไรให้ช่วยดูแลไหมคะ]\";\n\n} else if (msgType === 'location') {\n  // 4. ตำแหน่ง\n  finalInput = `[User ส่งตำแหน่งที่ตั้งมา: ${event.message.address}]`;\n\n} else {\n  // 5. อื่นๆ\n  finalInput = `[User ส่งข้อความรูปแบบ ${msgType} มา]`;\n}\n\nreturn {\n  json: {\n    chatInput: finalInput\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        -896
+      ],
+      "id": "d0188a8e-7b71-49aa-8c0f-828f67670245",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to save feedback. Arguments: Message, PhoneNumber (Optional for positive feedback)",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1lc_bh2ff6d4QtiOkAbCI7xks511cdcjtGm5tNlfP1tU",
+          "mode": "list",
+          "cachedResultName": "รูปภาพเมนูร้านกินข้าวบ้านน้องทราย",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lc_bh2ff6d4QtiOkAbCI7xks511cdcjtGm5tNlfP1tU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 545111941,
+          "mode": "list",
+          "cachedResultName": "Feedback",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lc_bh2ff6d4QtiOkAbCI7xks511cdcjtGm5tNlfP1tU/edit#gid=545111941"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CustomerID",
+              "displayName": "CustomerID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PhoneNumber",
+              "displayName": "PhoneNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -352,
+        -496
+      ],
+      "id": "2ba6031d-6342-4b9b-bcde-496422820709",
+      "name": "saveFeedbackTool",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BFzqtZ4Jdc301hqN",
+          "name": "sheet กินข้าวบ้านน้องทราย"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. ดึงข้อมูลเมนูทั้งหมดจาก Google Sheets มาจัดรูปแบบ\nconst menuItems = $input.all();\nlet menuText = \"=== รายการอาหารปัจจุบัน ===\\n\";\n\nmenuItems.forEach((item, index) => {\n  const m = item.json;\n  // ตรวจสอบชื่อคอลัมน์ให้ตรงกับใน Sheet (Menu, Price, Detail, ImageLink)\n  menuText += `${index + 1}. ${m.Menu || m.name} ราคา ${m.Price || m.price} บาท\\n`;\n  menuText += `   รายละเอียด: ${m.Detail || ''}\\n`;\n  menuText += `   รูปภาพ: ${m.ImageLink || ''}\\n\\n`;\n});\n\n// 2. ดึงข้อความที่ User พิมพ์มา (จาก Node แรกสุด)\n// แก้ชื่อ 'Code in JavaScript' ให้ตรงกับชื่อ Node แรกของคุณถ้ามีการเปลี่ยนชื่อ\nconst userInput = $($input.first().json.chatInput).first().json.chatInput; \n\n// 3. ส่งข้อมูลทั้งสองอย่างไปให้ AI\nreturn {\n  json: {\n    formattedMenu: menuText,\n    chatInput: userInput\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -896
+      ],
+      "id": "3991b398-fe0c-42f7-b082-a1bc10117126",
+      "name": "Code in JavaScript1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1lc_bh2ff6d4QtiOkAbCI7xks511cdcjtGm5tNlfP1tU",
+          "mode": "list",
+          "cachedResultName": "รูปภาพเมนูร้านกินข้าวบ้านน้องทราย",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lc_bh2ff6d4QtiOkAbCI7xks511cdcjtGm5tNlfP1tU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "manu",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1lc_bh2ff6d4QtiOkAbCI7xks511cdcjtGm5tNlfP1tU/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -464,
+        -896
+      ],
+      "id": "fae375e7-838f-4424-89e7-bfae2a964348",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "BFzqtZ4Jdc301hqN",
+          "name": "sheet กินข้าวบ้านน้องทราย"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "manu": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "saveFeedbackTool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5ad56853696598a6eff8f657de8b13d4264e6300fc1bab5a313186809fef1503"
+  }
+}

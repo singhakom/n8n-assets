@@ -24,7 +24,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -944,
+        -832,
         -688
       ],
       "id": "92642222-3ef7-4f39-984a-ecd5a894e75a",
@@ -94,8 +94,8 @@
       "type": "n8n-nodes-base.editImage",
       "typeVersion": 1,
       "position": [
-        -288,
-        -592
+        -128,
+        -624
       ],
       "id": "c40d3e55-c95e-44c8-ba9a-8a9cea340372",
       "name": "Edit Image"
@@ -168,8 +168,8 @@
       "name": "Post to Facebook",
       "type": "n8n-nodes-base.facebookGraphApi",
       "position": [
-        352,
-        -704
+        336,
+        -784
       ],
       "typeVersion": 1,
       "credentials": {
@@ -206,8 +206,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -128,
-        -704
+        -16,
+        -784
       ],
       "id": "dab02be1-837f-41c2-88be-7a6297a12f87",
       "name": "รวมพร้อมโพส"
@@ -221,15 +221,15 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -400,
-        -672
+        -272,
+        -624
       ],
       "id": "6953b1be-1414-4267-84f7-1a692aac469d",
       "name": "Merge โลโก้"
     },
     {
       "parameters": {
-        "jsCode": "// Node 3 - DEBUG VERSION (แสดงทุกปัญหา)\nconsole.log('🔍 Rows input:', $input.all().length);\n\nconst products = $input.all().map((item, i) => {\n  const p = item.json;\n  console.log(`Row ${i}: title=\"${p.title?.slice(0,30)}\" cat1=\"${p.global_category1}\"`);\n  \n  return {\n    json: {\n      row: i + 1,\n      title: String(p.title || p.Title || '').slice(0, 50),\n      cat1: String(p.global_category1 || p.Category1 || ''),\n      cat2: String(p.global_category2 || p.Category2 || ''),\n      link: String(p.product_link || p['product_short link'] || ''),\n      pref: String(p.is_preferred_shop || '').includes('Preferred'),\n      score: 1  // ให้ทุกชิ้น score 1\n    }\n  };\n}).filter(p => p.json.title.length > 3);  // title > 3 ตัวอักษร\n\nconsole.log(`✅ Products after filter: ${products.length}`);\nconsole.log('Sample:', JSON.stringify(products[0]?.json, null, 2));\n\nreturn [{\n  json: {\n    total: products.length,\n    summary: `all(${products.length})`,\n    top: products.slice(0, 10),\n    all: products\n  }\n}];\n"
+        "jsCode": "// 1. ดึงสินค้าทั้งหมดจาก Sheets\nconst allItems = $input.all();\n\n// 2. Shuffle (สับไพ่) เพื่อให้ลำดับเปลี่ยนไปทุกครั้ง\nfor (let i = allItems.length - 1; i > 0; i--) {\n    const j = Math.floor(Math.random() * (i + 1));\n    [allItems[i], allItems[j]] = [allItems[j], allItems[i]];\n}\n\n// 3. กรองและส่งออก 20 ชิ้นที่สับแล้วไปให้ AI เลือก\nconst shuffled = allItems.map(item => ({\n    json: {\n        title: String(item.json.title || '').slice(0, 80),\n        cat1: String(item.json.global_category1 || ''),\n        link: String(item.json.product_link || item.json['product_short link'] || '')\n    }\n})).filter(p => p.json.title.length > 5);\n\nreturn [{\n    json: {\n        total: shuffled.length,\n        top: shuffled.slice(0, 20) // ส่งให้ AI แค่ 20 ชิ้นเพื่อประหยัด Token\n    }\n}];"
       },
       "id": "c7d30cad-9c8e-4ab6-8ca9-f20b0aa042e9",
       "name": "3. จับคู่สินค้า (Code)1",
@@ -237,41 +237,8 @@
       "typeVersion": 2,
       "position": [
         -480,
-        -368
+        -400
       ]
-    },
-    {
-      "parameters": {
-        "httpRequestMethod": "POST",
-        "graphApiVersion": "v23.0",
-        "node": "={{ $json.fb_post_id }}",
-        "edge": "=comments",
-        "allowUnauthorizedCerts": "=",
-        "options": {
-          "queryParameters": {
-            "parameter": [
-              {
-                "name": "message",
-                "value": "={{ $json.product_name }}\n{{ $json.product_link }}"
-              }
-            ]
-          }
-        }
-      },
-      "id": "3c2c9772-c2dc-4cf7-8150-53ff61848301",
-      "name": "Comment to Facebook1",
-      "type": "n8n-nodes-base.facebookGraphApi",
-      "position": [
-        288,
-        -368
-      ],
-      "typeVersion": 1,
-      "credentials": {
-        "facebookGraphApi": {
-          "id": "fP0bCKwa9Zor9rZb",
-          "name": "instagram"
-        }
-      }
     },
     {
       "parameters": {
@@ -299,7 +266,7 @@
       "typeVersion": 4.5,
       "position": [
         -672,
-        -368
+        -400
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -329,7 +296,7 @@
       "typeVersion": 1,
       "position": [
         -320,
-        -368
+        -400
       ],
       "id": "845431fc-c016-40e6-9852-408e94694bba",
       "name": "AI เลือกสินค้า1",
@@ -342,16 +309,232 @@
     },
     {
       "parameters": {
-        "jsCode": "var inputData = $input.first();\nvar aiRaw = \"\";\nif (inputData && inputData.json && inputData.json.content && inputData.json.content.parts && inputData.json.content.parts[0] && inputData.json.content.parts[0].text) {\n  aiRaw = inputData.json.content.parts[0].text;\n}\n\nvar clean = aiRaw;\nif (clean.indexOf(\"{\") > 0) {\n  clean = clean.substring(clean.indexOf(\"{\"));\n}\nif (clean.lastIndexOf(\"}\") > 0) {\n  clean = clean.substring(0, clean.lastIndexOf(\"}\") + 1);\n}\n\nvar aiResp = { group: \"default\" };\ntry {\n  aiResp = JSON.parse(clean);\n} catch(e) {\n}\n\nvar group = aiResp.group || \"default\";\nvar node3 = $(\"3. จับคู่สินค้า (Code)1\").first();\nvar products = [];\nif (node3 && node3.json && node3.json.top) {\n  products = node3.json.top;\n}\n\n// 🔥 สุ่มมั่วทุกโพสต์!\nvar match = products.length > 0 ? products[Math.floor(Math.random() * products.length)] : { title: \"สินค้าเด่นวันนี้\", link: \"https://shopee.co.th/moneyminute\" };\n\nvar fbId = \"just_posted\";\ntry {\n  fbId = $(\"Post to Facebook\").first().json.id || \"just_posted\";\n} catch(e) {\n}\n\nreturn [{\n  json: {\n    fb_post_id: fbId,\n    product_name: match.json ? match.json.title : match.title,\n    product_link: match.json ? match.json.link : match.link,\n    ai_group: group,\n    random_index: products.length > 0 ? Math.floor(Math.random() * products.length) : 0,\n    total_products: products.length\n  }\n}];\n"
+        "jsCode": "// 1. แกะคำตอบ AI\nlet aiRaw = $input.first().json.content.parts[0].text;\nlet clean = aiRaw.replace(/```json|```/g, '').trim();\nlet aiResp = { group: \"default\" };\ntry { aiResp = JSON.parse(clean); } catch(e) {}\n\n// 2. ดึงสินค้าที่สับไว้แล้วจากโหนด 3. จับคู่สินค้า (Code)1\nconst productsNode = $(\"3. จับคู่สินค้า (Code)1\").first().json;\nconst products = productsNode.top || [];\n\n// 3. สุ่มเลือก 1 ชิ้นจากลิสต์\nconst match = products.length > 0 \n  ? products[Math.floor(Math.random() * products.length)] \n  : { json: { title: \"สินค้าแนะนำวันนี้\", link: \"https://shopee.co.th/moneyminute\" } };\n\n// 4. ดึง ID (แก้ไขชื่อโหนดให้ตรงกับหน้าจอของคุณเป๊ะๆ)\nlet fbId = \"N/A\";\nlet igId = \"N/A\";\ntry {\n  fbId = $(\"Post to Facebook\").first().json.id; // ตรงนี้แก้ชื่อให้ตรงแล้ว\n  igId = $(\"IG Publish\").first().json.id;\n} catch(e) {}\n\nreturn [{\n  json: {\n    fb_post_id: fbId,\n    ig_media_id: igId,\n    product_name: match.json.title,\n    product_link: match.json.link,\n    headline: $(\"Code in JavaScript\").first().json.headline,\n    ai_group: aiResp.group || \"default\"\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         -32,
-        -368
+        -400
       ],
       "id": "1b3e60bf-4020-4ffd-b440-ef9bc687da76",
       "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst fileName = `news_${Date.now()}.png`;\nreturn {\n  file_content: buffer.toString('base64'),\n  file_name: fileName,\n  raw_url: `https://raw.githubusercontent.com/singhakom/news-images/main/${fileName}`\n};"
+      },
+      "id": "eef7996e-1b04-4d1f-afe2-59376cd3c779",
+      "name": "Prepare for GitHub",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -624
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/singhakom/news-images/contents/{{ $json.file_name }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "upload news image"
+            },
+            {
+              "name": "content",
+              "value": "={{ $json.file_content }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2240efe5-2c1a-4e5e-b24b-b86c01e9e7ec",
+      "name": "Upload to GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        272,
+        -624
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v21.0/17841478525110407/media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "image_url",
+              "value": "={{ $('Prepare for GitHub').item.json.raw_url }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $('Code in JavaScript').item.json.fb_caption }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4c51c99b-fab6-4b8d-8710-bdd4169afdee",
+      "name": "IG Container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        432,
+        -624
+      ],
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "Yp7VURXUte933ody",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v21.0/17841478525110407/media_publish",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f1dd89b8-a1fc-4cd6-b1a3-bffb32c67ea8",
+      "name": "IG Publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        800,
+        -624
+      ],
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "Yp7VURXUte933ody",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "id": "5349cad3-84d4-4e96-8ea6-34ee882436a1",
+      "name": "Wait 10s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        -624
+      ],
+      "webhookId": "103ca8ea-27d6-4625-9b69-b7e8308ae1a4"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        992,
+        -672
+      ],
+      "id": "2844f08e-7346-455a-af33-ef5db7db11c0",
+      "name": "รวมโพสแล้วไปแปะลิงค์"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.github.com/repos/singhakom/news-images/contents/{{ $node[\"Prepare for GitHub\"].json.file_name }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "cleanup temporary image"
+            },
+            {
+              "name": "sha",
+              "value": "={{ $node[\"Upload to GitHub\"].json.content.sha }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        832,
+        -400
+      ],
+      "id": "a8273c99-2275-4ca9-9491-448d7bf3a5a2",
+      "name": "Delete from GitHub"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $('Code in JavaScript2').item.json.ig_media_id }}/comments",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "=🙏 ขอบคุณที่ติดตามครับ สนับสนุนเราและอ่านข่าวได้ที่ Facebook: MoneyMinute นะครับ"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ebe3b8d6-d50a-4b45-ac30-96682155ff46",
+      "name": "Comment to Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        352,
+        -400
+      ],
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "Yp7VURXUte933ody",
+          "name": "Facebook Graph account"
+        }
+      }
     },
     {
       "parameters": {
@@ -373,12 +556,12 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Product": "={{ $('Code in JavaScript2').first().json.product_name || 'ไม่มีสินค้า' }}",
-            "Link": "={{ $('Code in JavaScript2').first().json.product_link || '#' }}",
-            "PostID": "={{ $('Code in JavaScript2').first().json.fb_post_id || 'just_posted' }}",
             "Date": "={{ $now.setZone('Asia/Bangkok').toFormat('dd/MM/yyyy HH:mm:ss') }}",
-            "Headline": "={{ $('Code in JavaScript').first().json.headline || 'N/A' }}",
-            "AIGroup": "={{ $('Code in JavaScript2').first().json.ai_group || 'default' }}"
+            "Headline": "={{ $json.headline }}",
+            "Product": "={{ $json.product_name }}",
+            "FB_ID": "={{ $json.fb_post_id }}",
+            "IG_ID": "={{ $json.ig_media_id }}",
+            "Link": "={{ $json.product_link }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -410,6 +593,24 @@
               "canBeUsedToMatch": true
             },
             {
+              "id": "FB_ID",
+              "displayName": "FB_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IG_ID",
+              "displayName": "IG_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
               "id": "Link",
               "displayName": "Link",
               "required": false,
@@ -417,25 +618,6 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true
-            },
-            {
-              "id": "PostID",
-              "displayName": "PostID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "AIGroup",
-              "displayName": "AIGroup",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -443,14 +625,14 @@
         },
         "options": {}
       },
+      "id": "5701c790-803b-409d-bce0-9e6dc1c4210f",
+      "name": "บันทึกการโพส 2 แพลตฟอร์ม",
       "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
+      "typeVersion": 4.5,
       "position": [
-        528,
-        -368
+        608,
+        -400
       ],
-      "id": "31ae60ad-3a13-4a1c-8191-db5b585674ec",
-      "name": "บันทึกการโพส1",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "KMmoDYNFMPTkVTBx",
@@ -460,82 +642,30 @@
     },
     {
       "parameters": {
-        "jsCode": "const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst fileName = `news_${Date.now()}.png`;\nreturn {\n  file_content: buffer.toString('base64'),\n  file_name: fileName,\n  raw_url: `https://raw.githubusercontent.com/singhakom/news-images/main/${fileName}`\n};"
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v23.0",
+        "node": "={{ $json.fb_post_id }}",
+        "edge": "=comments",
+        "allowUnauthorizedCerts": "=",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "message",
+                "value": "={{ $json.product_name }}\n\n{{ $json.product_link }}"
+              }
+            ]
+          }
+        }
       },
-      "id": "eef7996e-1b04-4d1f-afe2-59376cd3c779",
-      "name": "Prepare for GitHub",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "id": "3c2c9772-c2dc-4cf7-8150-53ff61848301",
+      "name": "Comment to Facebook",
+      "type": "n8n-nodes-base.facebookGraphApi",
       "position": [
-        -16,
-        -560
-      ]
-    },
-    {
-      "parameters": {
-        "method": "PUT",
-        "url": "=https://api.github.com/repos/singhakom/news-images/contents/{{ $json.file_name }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer 
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "message",
-              "value": "upload news image"
-            },
-            {
-              "name": "content",
-              "value": "={{ $json.file_content }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "2240efe5-2c1a-4e5e-b24b-b86c01e9e7ec",
-      "name": "Upload to GitHub",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        176,
-        -560
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://graph.facebook.com/v21.0/17841478525110407/media",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "facebookGraphApi",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "image_url",
-              "value": "={{ $('Prepare for GitHub').item.json.raw_url }}"
-            },
-            {
-              "name": "caption",
-              "value": "={{ $('Code in JavaScript').item.json.fb_caption }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "4c51c99b-fab6-4b8d-8710-bdd4169afdee",
-      "name": "IG Container",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        336,
-        -560
+        160,
+        -400
       ],
+      "typeVersion": 1,
       "credentials": {
         "facebookGraphApi": {
           "id": "Yp7VURXUte933ody",
@@ -545,64 +675,20 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://graph.facebook.com/v21.0/17841478525110407/media_publish",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "facebookGraphApi",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "creation_id",
-              "value": "={{ $json.id }}"
-            }
-          ]
-        },
+        "operation": "resize",
+        "width": 1080,
+        "height": 1080,
+        "resizeOption": "ignoreAspectRatio",
         "options": {}
       },
-      "id": "f1dd89b8-a1fc-4cd6-b1a3-bffb32c67ea8",
-      "name": "IG Publish",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
       "position": [
-        704,
-        -560
+        -528,
+        -688
       ],
-      "credentials": {
-        "facebookGraphApi": {
-          "id": "Yp7VURXUte933ody",
-          "name": "Facebook Graph account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "amount": 10
-      },
-      "id": "5349cad3-84d4-4e96-8ea6-34ee882436a1",
-      "name": "Wait 10s",
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        496,
-        -560
-      ],
-      "webhookId": "103ca8ea-27d6-4625-9b69-b7e8308ae1a4"
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineByPosition",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        896,
-        -672
-      ],
-      "id": "2844f08e-7346-455a-af33-ef5db7db11c0",
-      "name": "รวมโพสแล้วไปแปะลิงค์"
+      "id": "c6e98f90-2759-4bac-8a91-d1a1e0a940c4",
+      "name": "Resize1"
     }
   ],
   "connections": {
@@ -665,7 +751,7 @@
       "main": [
         [
           {
-            "node": "Merge โลโก้",
+            "node": "Resize1",
             "type": "main",
             "index": 0
           }
@@ -753,17 +839,6 @@
         ]
       ]
     },
-    "Comment to Facebook1": {
-      "main": [
-        [
-          {
-            "node": "บันทึกการโพส1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "โหลดคลังสินค้า1": {
       "main": [
         [
@@ -790,7 +865,7 @@
       "main": [
         [
           {
-            "node": "Comment to Facebook1",
+            "node": "Comment to Facebook",
             "type": "main",
             "index": 0
           }
@@ -857,6 +932,50 @@
         [
           {
             "node": "โหลดคลังสินค้า1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comment to Instagram": {
+      "main": [
+        [
+          {
+            "node": "บันทึกการโพส 2 แพลตฟอร์ม",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "บันทึกการโพส 2 แพลตฟอร์ม": {
+      "main": [
+        [
+          {
+            "node": "Delete from GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comment to Facebook": {
+      "main": [
+        [
+          {
+            "node": "Comment to Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resize1": {
+      "main": [
+        [
+          {
+            "node": "Merge โลโก้",
             "type": "main",
             "index": 0
           }
